@@ -1856,6 +1856,13 @@ class Model(BaseModel):
                 f"Either `values` or `length` must be specified for the '{name}' dimension."
             )
         if values is not None:
+            # xarray DataArrays passed as coord values must be unwrapped.
+            # tuple(DataArray) iterates yielding 0-d DataArrays instead of plain values,
+            # which breaks np.array_equal comparisons and InferenceData export.
+            import xarray as xr
+
+            if isinstance(values, xr.DataArray):
+                values = values.values
             # Conversion to a tuple ensures that the coordinate values are immutable.
             # Also unlike numpy arrays the's tuple.index(...) which is handy to work with.
             values = tuple(values)
